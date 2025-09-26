@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Computer Diagnosis Expert System</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        #symptom-form, #results {
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .symptom-question {
+            margin-bottom: 15px;
+        }
+        .collapsible {
+            background-color: #eee;
+            color: #444;
+            cursor: pointer;
+            padding: 18px;
+            width: 100%;
+            border: none;
+            text-align: left;
+            outline: none;
+            font-size: 15px;
+        }
+        .active, .collapsible:hover {
+            background-color: #ccc;
+        }
+        .content {
+            padding: 0 18px;
+            display: none;
+            overflow: hidden;
+            background-color: #f1f1f1;
+        }
+    </style>
+</head>
+<body>
+    <h1>Computer Diagnosis Expert System</h1>
+    
+    <div id="symptom-form">
+        <h2>Symptoms</h2>
+        <!-- Symptom questions will be dynamically added here -->
+    </div>
+
+    <div id="results" style="display: none;">
+        <h2>Diagnosis Results</h2>
+        <canvas id="confidenceChart"></canvas>
+        <div id="solutions"></div>
+    </div>
+
+    <script>
+        const symptoms = [
+            'slow_performance', 'frequent_crashes', 'blue_screen', 'strange_noises',
+            'overheating', 'unresponsive_programs', 'slow_internet', 'popups'
+        ];
+        let currentSymptomIndex = 0;
+
+        function askNextSymptom() {
+            const symptomForm = document.getElementById('symptom-form');
+            if (currentSymptomIndex < symptoms.length) {
+                const symptom = symptoms[currentSymptomIndex];
+                const questionHtml = `
+                    <div class="symptom-question">
+                        <p>Does the computer exhibit ${symptom.replace('_', ' ')}?</p>
+                        <button onclick="answerSymptom('yes')">Yes</button>
+                        <button onclick="answerSymptom('no')">No</button>
+                        <button onclick="answerSymptom('unsure')">Unsure</button>
+                    </div>
+                `;
+                symptomForm.innerHTML = questionHtml;
+                currentSymptomIndex++;
+            } else {
+                symptomForm.innerHTML = '<p>All symptoms have been assessed.</p>';
+                getDiagnosis();
+            }
+        }
+
+        function answerSymptom(answer) {
+            // In a real application, you would send this answer to the server
+            console.log(`Symptom: ${symptoms[currentSymptomIndex - 1]}, Answer: ${answer}`);
+            askNextSymptom();
+        }
+
+        function getDiagnosis() {
+            // In a real application, you would make an AJAX request to the server here
+            // For this example, we'll use mock data
+            const mockDiagnosis = [
+                { cause: 'virus', confidence: 0.8, solution: 'Run a full system scan with updated antivirus software.' },
+                { cause: 'dust', confidence: 0.6, solution: 'Clean the computer internals, especially fans and heat sinks.' },
+                { cause: 'hardware_failure', confidence: 0.4, solution: 'Check hardware connections and consider replacing faulty components.' }
+            ];
+            displayResults(mockDiagnosis);
+        }
+
+        function displayResults(diagnosis) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.style.display = 'block';
+
+            // Create chart
+            const ctx = document.getElementById('confidenceChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: diagnosis.map(d => d.cause),
+                    datasets: [{
+                        label: 'Confidence',
+                        data: diagnosis.map(d => d.confidence),
+                        backgroundColor: 'rgba(75, 192, 192, 0.6)'
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 1
+                        }
+                    }
+                }
+            });
+
+            // Display solutions
+            const solutionsDiv = document.getElementById('solutions');
+            solutionsDiv.innerHTML = diagnosis.map(d => `
+                <button class="collapsible">${d.cause} (Confidence: ${d.confidence.toFixed(2)})</button>
+                <div class="content">
+                    <p>${d.solution}</p>
+                </div>
+            `).join('');
+
+            // Add collapsible functionality
+            const coll = document.getElementsByClassName("collapsible");
+            for (let i = 0; i < coll.length; i++) {
+                coll[i].addEventListener("click", function() {
+                    this.classList.toggle("active");
+                    const content = this.nextElementSibling;
+                    if (content.style.display === "block") {
+                        content.style.display = "none";
+                    } else {
+                        content.style.display = "block";
+                    }
+                });
+            }
+        }
+
+        // Start the diagnosis process
+        askNextSymptom();
+    </script>
+</body>
+</html>

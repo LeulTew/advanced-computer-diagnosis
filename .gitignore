@@ -1,0 +1,21 @@
+# General
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+*.swp
+*.swo
+*:[Zz]one.Identifier
+
+# Editor directories
+.vscode/
+.idea/
+
+# Node dependencies
+node_modules/
+
+# Python cache (in case of tooling scripts)
+__pycache__/
+
+# Prolog temporary files
+*.qlf

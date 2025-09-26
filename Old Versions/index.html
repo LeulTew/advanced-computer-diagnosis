@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Computer Diagnosis Expert System</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      h1 {
+        color: #2c3e50;
+      }
+      #symptom-form,
+      #results {
+        background-color: #f9f9f9;
+        border-radius: 5px;
+        padding: 20px;
+        margin-bottom: 20px;
+      }
+      button {
+        background-color: #3498db;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin-right: 10px;
+      }
+      button:hover {
+        background-color: #2980b9;
+      }
+      .symptom-question {
+        margin-bottom: 15px;
+      }
+      .collapsible {
+        background-color: #eee;
+        color: #444;
+        cursor: pointer;
+        padding: 18px;
+        width: 100%;
+        border: none;
+        text-align: left;
+        outline: none;
+        font-size: 15px;
+      }
+      .active,
+      .collapsible:hover {
+        background-color: #ccc;
+      }
+      .content {
+        padding: 0 18px;
+        display: none;
+        overflow: hidden;
+        background-color: #f1f1f1;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Computer Diagnosis Expert System</h1>
+
+    <div id="symptom-form">
+      <h2>Symptoms</h2>
+      <!-- Symptom questions will be dynamically added here -->
+    </div>
+
+    <div id="results" style="display: none">
+      <h2>Diagnosis Results</h2>
+      <canvas id="confidenceChart"></canvas>
+      <div id="solutions"></div>
+    </div>
+
+    <script>
+      let symptoms = [];
+      let currentSymptomIndex = 0;
+      let userResponses = {};
+
+      async function loadSymptoms() {
+        const response = await fetch("http://localhost:8000/api/symptoms");
+        const data = await response.json();
+        symptoms = data.symptoms;
+        askNextSymptom();
+      }
+
+      function askNextSymptom() {
+        const symptomForm = document.getElementById("symptom-form");
+        if (currentSymptomIndex < symptoms.length) {
+          const symptom = symptoms[currentSymptomIndex];
+          const questionHtml = `
+                    <div class="symptom-question">
+                        <p>Does the computer exhibit ${symptom.replace(
+                          "_",
+                          " "
+                        )}?</p>
+                        <button onclick="answerSymptom('yes')">Yes</button>
+                        <button onclick="answerSymptom('no')">No</button>
+                        <button onclick="answerSymptom('unsure')">Unsure</button>
+                    </div>
+                `;
+          symptomForm.innerHTML = questionHtml;
+          currentSymptomIndex++;
+        } else {
+          symptomForm.innerHTML = "<p>All symptoms have been assessed.</p>";
+          getDiagnosis();
+        }
+      }
+
+      function answerSymptom(answer) {
+        const symptom = symptoms[currentSymptomIndex - 1];
+        userResponses[symptom] = answer;
+        askNextSymptom();
+      }
+
+      async function getDiagnosis() {
+        try {
+          const response = await fetch("http://localhost:8000/api/diagnose", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(userResponses),
+          });
+
+          if (!response.ok) {
+            const errorMessage = await response.text();
+            throw new Error(errorMessage);
+          }
+
+          const data = await response.json();
+          console.log("Diagnosis result:", data); // Log the diagnosis result
+          displayResults(data.problem);
+        } catch (error) {
+          console.error("Failed to get diagnosis:", error); // Log any errors
+          alert(
+            "There was an error getting the diagnosis. Please try again later."
+          );
+        }
+      }
+
+      function displayResults(problem) {
+        if (!problem) {
+          alert("No diagnosis was found based on the symptoms provided.");
+          return;
+        }
+
+        const resultsDiv = document.getElementById("results");
+        resultsDiv.style.display = "block";
+
+        const causes = problem
+          .split(" | ")
+          .map((cause) => {
+            const match = cause.match(/(.+)\s+\(Confidence:\s+(.+)\):\s+(.+)/);
+            if (!match) {
+              return null;
+            }
+            const [, causeName, confidence, solution] = match;
+            return {
+              causeName,
+              confidence: parseFloat(confidence),
+              solution,
+            };
+          })
+          .filter(Boolean);
+
+        // Display solutions
+        const solutionsDiv = document.getElementById("solutions");
+        solutionsDiv.innerHTML = "";
+        causes.forEach((cause) => {
+          const collapsibleHtml = `
+                <button class="collapsible">${cause.causeName} (Confidence: ${cause.confidence})</button>
+                <div class="content">
+                    <p>${cause.solution}</p>
+                </div>
+            `;
+          solutionsDiv.innerHTML += collapsibleHtml;
+        });
+
+        // Add chart
+        const ctx = document.getElementById("confidenceChart").getContext("2d");
+        new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: causes.map((cause) => cause.causeName),
+            datasets: [
+              {
+                label: "Confidence",
+                data: causes.map((cause) => cause.confidence),
+                backgroundColor: "rgba(75, 192, 192, 0.2)",
+                borderColor: "rgba(75, 192, 192, 1)",
+                borderWidth: 1,
+              },
+            ],
+          },
+          options: {
+            scales: {
+              y: {
+                beginAtZero: true,
+              },
+            },
+          },
+        });
+
+        // Initialize collapsible content
+        const collapsibles = document.getElementsByClassName("collapsible");
+        for (let i = 0; i < collapsibles.length; i++) {
+          collapsibles[i].addEventListener("click", function () {
+            this.classList.toggle("active");
+            const content = this.nextElementSibling;
+            content.style.display =
+              content.style.display === "block" ? "none" : "block";
+          });
+        }
+      }
+
+      loadSymptoms();
+    </script>
+  </body>
+</html>
