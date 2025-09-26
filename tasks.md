@@ -17,6 +17,9 @@ This roadmap highlights actionable steps to elevate the Advanced Computer Proble
 - [x] **Natural language input** – Integrate NLP to allow users to describe issues in plain English.
 - [x] **Multi-language support** – Localize prompts and outputs for non-English users.
 - [x] **Voice interface** – Add speech-to-text for hands-free troubleshooting.
+- [ ] **Guided remediation flows** – Offer step-by-step checklists in the CLI and web UI after a diagnosis so users know exactly what to do next.
+- [ ] **In-app knowledge authoring** – Let users contribute new symptoms/causes/solutions directly from the web interface with review safeguards before persisting to the KB.
+- [ ] **Smart symptom suggestions** – Suggest related symptoms or clarifying questions based on current selections to steer users toward better diagnoses.
 
 ## Tooling & Testing
 - [x] **Automate knowledge base linting** – Write Prolog unit tests (using `plunit`) to verify facts are consistent and non-duplicated. 

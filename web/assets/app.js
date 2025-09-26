@@ -8,6 +8,11 @@ const rootEl = document.documentElement;
 const themeToggle = document.getElementById("theme-toggle");
 const themeToggleIcon = themeToggle?.querySelector(".theme-toggle__icon");
 const themeToggleLabel = themeToggle?.querySelector(".theme-toggle__label");
+const statusIcons = { info: "ℹ️", success: "✅", error: "⚠️", loading: "⏳" };
+const runButtonDefaultLabel = runButton?.textContent?.trim() || "Run diagnosis";
+const DEFAULT_SKELETON_CARD_COUNT = 3;
+
+let statusClearTimer = null;
 
 const THEME_STORAGE_KEY = "acpd-theme";
 let userSetTheme = false;
@@ -99,14 +104,96 @@ initTheme();
 let allSymptoms = [];
 let filteredSymptoms = [];
 
-function showStatus(message, type = "info") {
-  statusEl.textContent = message;
+function sanitizeText(value) {
+  if (value === null || value === undefined) return "";
+  const text = String(value);
+  const map = {
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  };
+  return text.replace(/[&<>"']/g, (char) => map[char]);
+}
+
+function showStatus(message, type = "info", options = {}) {
+  if (!statusEl) return;
+
+  const icon = statusIcons[type] || statusIcons.info;
+  const { autoClear = type !== "error" && type !== "loading", delay = 4200 } = options;
+
   statusEl.dataset.type = type;
+  statusEl.innerHTML = `
+    <span class="status-icon" aria-hidden="true">${icon}</span>
+    <span class="status-message">${sanitizeText(message)}</span>
+  `;
+
+  if (statusClearTimer) {
+    window.clearTimeout(statusClearTimer);
+    statusClearTimer = null;
+  }
+
+  if (autoClear) {
+    statusClearTimer = window.setTimeout(() => {
+      clearStatus();
+    }, delay);
+  }
 }
 
 function clearStatus() {
-  statusEl.textContent = "";
-  delete statusEl.dataset.type;
+  if (!statusEl) return;
+  if (statusClearTimer) {
+    window.clearTimeout(statusClearTimer);
+    statusClearTimer = null;
+  }
+  statusEl.innerHTML = "";
+  statusEl.removeAttribute("data-type");
+}
+
+function setRunButtonBusy(isBusy) {
+  if (!runButton) return;
+  if (isBusy) {
+    runButton.dataset.busy = "true";
+  } else {
+    delete runButton.dataset.busy;
+  }
+  runButton.disabled = isBusy;
+  runButton.textContent = isBusy ? "Analyzing…" : runButtonDefaultLabel;
+}
+
+function renderDiagnosisSkeleton(cardCount = DEFAULT_SKELETON_CARD_COUNT) {
+  if (!resultsEl) return;
+  const cards = Array.from({ length: cardCount })
+    .map(
+      () => `
+      <div class="skeleton-card">
+        <span class="skeleton skeleton--line"></span>
+        <span class="skeleton skeleton--line short"></span>
+        <span class="skeleton skeleton--block"></span>
+      </div>
+    `
+    )
+    .join("");
+
+  resultsEl.innerHTML = `
+    <div class="diagnosis-loading" aria-hidden="true">
+      <span class="skeleton skeleton--heading"></span>
+      <div class="skeleton-grid">${cards}</div>
+    </div>
+  `;
+}
+
+function renderErrorState(message) {
+  if (!resultsEl) return;
+  resultsEl.innerHTML = `
+    <div class="diagnosis-grid">
+      <div class="diagnosis-card">
+        <h3>We hit a snag</h3>
+        <p class="solution">${sanitizeText(message)}</p>
+      </div>
+    </div>
+  `;
 }
 
 function createSymptomRow(symptom) {
@@ -177,7 +264,7 @@ function gatherSelections() {
 }
 
 async function loadSymptoms() {
-  showStatus("Loading symptoms…");
+  showStatus("Loading symptoms…", "loading", { autoClear: false });
   try {
     const response = await fetch("/api/symptoms");
     if (!response.ok) {
@@ -187,9 +274,9 @@ async function loadSymptoms() {
     allSymptoms = data.symptoms || [];
     filteredSymptoms = [...allSymptoms];
     renderSymptoms(filteredSymptoms);
-    clearStatus();
+    showStatus("Symptoms loaded. Start selecting what you notice.", "success");
   } catch (error) {
-    showStatus(error.message || "Unable to fetch symptoms.", "error");
+    showStatus(error.message || "Unable to fetch symptoms.", "error", { autoClear: false });
   }
 }
 
@@ -200,11 +287,13 @@ function renderDiagnoses(diagnoses) {
 
   const items = diagnoses.map((entry) => {
     const confidencePercent = (entry.confidence * 100).toFixed(1);
+    const label = sanitizeText(entry.label ?? entry.cause ?? "Unknown cause");
+    const solution = sanitizeText(entry.solution ?? "No specific solution recorded.");
     return `
       <div class="diagnosis-card">
-        <h3>${entry.label}</h3>
+        <h3>${label}</h3>
         <p class="confidence">Confidence: ${confidencePercent}%</p>
-        <p class="solution">${entry.solution}</p>
+        <p class="solution">${solution}</p>
       </div>
     `;
   });
@@ -213,9 +302,19 @@ function renderDiagnoses(diagnoses) {
 }
 
 function renderSummary(summary) {
+  const resolveLabel = (item) => {
+    if (!item) return "";
+    if (typeof item === "string") return item;
+    if (typeof item === "object") {
+      if (item.label) return item.label;
+      if (item.id) return item.id;
+    }
+    return String(item);
+  };
+
   const toList = (items) =>
     items.length
-      ? `<ul>${items.map((item) => `<li>${item.label}</li>`).join("")}</ul>`
+      ? `<ul>${items.map((item) => `<li>${sanitizeText(resolveLabel(item))}</li>`).join("")}</ul>`
       : `<p class="muted">Nothing recorded</p>`;
 
   return `
@@ -251,12 +350,16 @@ async function runDiagnosis() {
   clearStatus();
   const selections = gatherSelections();
   if (!selections.length) {
-    showStatus("Select at least one symptom before running a diagnosis.", "error");
+    showStatus("Select at least one symptom before running a diagnosis.", "error", { autoClear: false });
+    if (resultsEl) {
+      resultsEl.innerHTML = `<p class="muted">Pick one or more symptoms, then run the diagnosis.</p>`;
+    }
     return;
   }
 
-  showStatus("Analyzing…");
-  runButton.disabled = true;
+  showStatus("Analyzing your selections…", "loading", { autoClear: false });
+  setRunButtonBusy(true);
+  renderDiagnosisSkeleton();
   try {
     const response = await fetch("/api/diagnose", {
       method: "POST",
@@ -279,10 +382,15 @@ async function runDiagnosis() {
     const payload = await response.json();
     renderResults(payload);
     showStatus("Diagnosis completed.", "success");
+    window.requestAnimationFrame(() => {
+      resultsEl.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
   } catch (error) {
-    showStatus(error.message || "Unexpected error while diagnosing.", "error");
+    const message = error.message || "Unexpected error while diagnosing.";
+    showStatus(message, "error", { autoClear: false });
+    renderErrorState(message);
   } finally {
-    runButton.disabled = false;
+    setRunButtonBusy(false);
   }
 }
 
@@ -291,8 +399,10 @@ function clearSelections() {
   selects.forEach((select) => {
     select.value = "skip";
   });
-  resultsEl.innerHTML = `<p class="muted">Selections cleared. Pick new symptoms and run again.</p>`;
-  clearStatus();
+  if (resultsEl) {
+    resultsEl.innerHTML = `<p class="muted">Selections cleared. Pick new symptoms and run again.</p>`;
+  }
+  showStatus("Selections cleared. Ready when you are.", "info");
 }
 
 // Event bindings

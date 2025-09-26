@@ -15,6 +15,7 @@ An expert companion that diagnoses computer problems like a seasoned support eng
 - 🔍 **Transparency First** – Inspect what the system knows, why it reached a decision, and how evidence shifted confidence.
 - 🧱 **Composable Architecture** – Clear separation of inference, knowledge, persistence, and experience layers makes extension painless.
 - 🗣️ **Natural Language & Voice** – Seed diagnoses with free text or optional speech-to-text (Vosk) before guided questioning.
+- 🖥️ **Web Control Room** – Serve the single-page assistant from `web/server.pl` to diagnose from the browser with searchable symptoms and live status feedback.
 - 🌐 **Multi-language Prompts** – Switch between English and Spanish instantly; extendable to more locales.
 - 📊 **Built-in Analytics** – Session summaries, JSONL logging, and quick stats on total runs and top causes.
 
@@ -24,14 +25,15 @@ An expert companion that diagnoses computer problems like a seasoned support eng
 2. [System Architecture](#-system-architecture)
 3. [Knowledge Lifecycle](#-knowledge-lifecycle)
 4. [Quickstart](#-quickstart)
-5. [CLI Tour](#-cli-tour)
-6. [Analytics & Reporting](#-analytics--reporting)
-7. [Tooling & Automation](#-tooling--automation)
-8. [Documentation](#-documentation)
-9. [Testing & Quality](#-testing--quality)
-10. [Contribution Guide](#-contribution-guide)
-11. [Roadmap & Inspirations](#-roadmap--inspirations)
-12. [License](#-license)
+5. [Web Interface](#-web-interface)
+6. [CLI Tour](#-cli-tour)
+7. [Analytics & Reporting](#-analytics--reporting)
+8. [Tooling & Automation](#-tooling--automation)
+9. [Documentation](#-documentation)
+10. [Testing & Quality](#-testing--quality)
+11. [Contribution Guide](#-contribution-guide)
+12. [Roadmap & Inspirations](#-roadmap--inspirations)
+13. [License](#-license)
 
 ## 🚀 Vision & Story
 
@@ -121,7 +123,7 @@ cd advanced-computer-diagnosis
 swipl -s diag.pl -g halt
 ```
 
-### 3. Fire Up the Expert
+### 3. Launch the CLI Expert
 
 ```fish
 swipl -s diag.pl -g main
@@ -129,6 +131,16 @@ swipl -s diag.pl -g main
 
 If you see the menu, you’re ready to diagnose.
 Just enter the menu number (e.g., `1`)—no trailing period required.
+
+### 4. Start the Web Interface
+
+Serve the browser experience from the built-in HTTP server. It delivers the same inference engine over a modern UI with search, filtering, and live results.
+
+```fish
+swipl -q -s web/server.pl -g "server:start(8090)"
+```
+
+Then open [http://localhost:8090](http://localhost:8090) in your browser. Press `Ctrl+C` followed by `halt.` in the Prolog console to stop the server when you are done.
 
 ### Optional: Enable Voice Input
 
@@ -140,6 +152,20 @@ set -x VOSK_MODEL_PATH /absolute/path/to/vosk-model-small-en-us-0.15
 ```
 
 The **Voice input** menu option falls back to guided mode automatically if prerequisites are missing.
+
+## 🖥️ Web Interface
+
+The browser UI is served by `web/server.pl` and backed by `web/index.html`, `web/assets/app.js`, and `web/assets/styles.css`. It mirrors the inference logic of the CLI while offering a focused workspace for quick triage.
+
+### What you get in the browser
+
+- **Symptom search & filtering** – Type to narrow the curated symptom list instantly, then choose *Yes / No / Unsure / Skip* per row.
+- **Inline status feedback** – A banner above the results reports loading progress, errors, and completion without reloading the page.
+- **Responsive diagnosis cards** – Ranked causes show confidence percentages and suggested fixes, laid out in adaptive grids.
+- **Session summary** – Positive, negative, and uncertain signals are grouped for at-a-glance review or copy/paste into tickets.
+- **Keyboard-friendly workflows** – Escape clears the search box, and buttons expose accessible labels for screen readers.
+
+Open the interface at [http://localhost:8090](http://localhost:8090) after running the server from the Quickstart. The page fetches `/api/symptoms` on load, and the **Run diagnosis** button POSTs selections to `/api/diagnose`. No build step is required; static assets are bundled with the repository.
 
 ## 🖥️ CLI Tour
 
