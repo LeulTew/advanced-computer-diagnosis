@@ -21,10 +21,77 @@
   --error-soft: rgba(220, 38, 38, 0.12);
   --shadow-lg: 0 40px 80px -48px rgba(15, 23, 42, 0.55);
   --shadow-sm: 0 24px 60px -46px rgba(15, 23, 42, 0.4);
+  --page-gradient: radial-gradient(120% 120% at 80% 0%, rgba(79, 70, 229, 0.18) 0%, transparent 60%),
+    linear-gradient(180deg, #f8fafc 0%, #eef2ff 35%, #ffffff 100%);
+  --page-overlay: radial-gradient(circle at 18% 18%, rgba(14, 165, 233, 0.14), transparent 45%),
+    radial-gradient(circle at 82% -5%, rgba(99, 102, 241, 0.16), transparent 55%);
+  --ghost-bg: rgba(255, 255, 255, 0.6);
+  --ghost-border: rgba(15, 23, 42, 0.08);
+  --ghost-hover-border: rgba(37, 99, 235, 0.24);
+  --top-link-bg: rgba(37, 99, 235, 0.12);
+  --top-link-border: rgba(37, 99, 235, 0.12);
+  --top-link-hover-bg: rgba(37, 99, 235, 0.18);
+  --secondary-bg: rgba(148, 163, 184, 0.15);
+  --secondary-border: rgba(148, 163, 184, 0.2);
+  --secondary-hover-bg: rgba(148, 163, 184, 0.23);
+  --list-item-bg: rgba(248, 250, 252, 0.7);
+  --list-item-border: rgba(148, 163, 184, 0.14);
+  --input-bg: rgba(255, 255, 255, 0.75);
+  --input-border: var(--divider);
+  --diagnosis-card-bg: rgba(255, 255, 255, 0.9);
+  --summary-bg: rgba(248, 250, 252, 0.8);
+  --summary-border: rgba(148, 163, 184, 0.18);
+  --code-bg: rgba(37, 99, 235, 0.08);
+  --code-text: var(--primary-strong);
+  --scrollbar-thumb: rgba(148, 163, 184, 0.45);
   background-color: var(--bg);
   line-height: 1.55;
   letter-spacing: -0.01em;
   color: var(--text-primary);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0b1120;
+  --surface: rgba(15, 23, 42, 0.72);
+  --surface-strong: rgba(15, 23, 42, 0.9);
+  --border: rgba(148, 163, 184, 0.14);
+  --divider: rgba(148, 163, 184, 0.18);
+  --text-primary: #e2e8f0;
+  --text-secondary: #cbd5f5;
+  --muted: #64748b;
+  --primary: #3b82f6;
+  --primary-strong: #60a5fa;
+  --primary-soft: rgba(59, 130, 246, 0.18);
+  --accent: #22d3ee;
+  --success: #34d399;
+  --success-soft: rgba(16, 185, 129, 0.18);
+  --error: #f87171;
+  --error-soft: rgba(248, 113, 113, 0.16);
+  --shadow-lg: 0 40px 80px -52px rgba(2, 6, 23, 0.78);
+  --shadow-sm: 0 24px 60px -50px rgba(2, 6, 23, 0.72);
+  --page-gradient: linear-gradient(180deg, #0b1120 0%, #111827 45%, #0f172a 100%);
+  --page-overlay: radial-gradient(circle at 18% 18%, rgba(14, 165, 233, 0.12), transparent 45%),
+    radial-gradient(circle at 82% -5%, rgba(59, 130, 246, 0.18), transparent 55%);
+  --ghost-bg: rgba(30, 41, 59, 0.85);
+  --ghost-border: rgba(148, 163, 184, 0.32);
+  --ghost-hover-border: rgba(148, 163, 184, 0.48);
+  --top-link-bg: rgba(59, 130, 246, 0.16);
+  --top-link-border: rgba(59, 130, 246, 0.2);
+  --top-link-hover-bg: rgba(59, 130, 246, 0.24);
+  --secondary-bg: rgba(30, 41, 59, 0.8);
+  --secondary-border: rgba(148, 163, 184, 0.32);
+  --secondary-hover-bg: rgba(51, 65, 85, 0.8);
+  --list-item-bg: rgba(17, 24, 39, 0.78);
+  --list-item-border: rgba(148, 163, 184, 0.28);
+  --input-bg: rgba(17, 24, 39, 0.85);
+  --input-border: rgba(148, 163, 184, 0.3);
+  --diagnosis-card-bg: rgba(17, 24, 39, 0.85);
+  --summary-bg: rgba(17, 24, 39, 0.78);
+  --summary-border: rgba(148, 163, 184, 0.32);
+  --code-bg: rgba(59, 130, 246, 0.18);
+  --code-text: #e0f2fe;
+  --scrollbar-thumb: rgba(148, 163, 184, 0.5);
 }
 
 *,
@@ -36,20 +103,20 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: radial-gradient(120% 120% at 80% 0%, rgba(79, 70, 229, 0.18) 0%, transparent 60%),
-    linear-gradient(180deg, #f8fafc 0%, #eef2ff 35%, #ffffff 100%);
+  background: var(--page-gradient);
   color: inherit;
   position: relative;
+  transition: background 0.4s ease, color 0.3s ease;
 }
 
 body::before {
   content: "";
   position: fixed;
   inset: 0;
-  background: radial-gradient(circle at 18% 18%, rgba(14, 165, 233, 0.14), transparent 45%),
-    radial-gradient(circle at 82% -5%, rgba(99, 102, 241, 0.16), transparent 55%);
+  background: var(--page-overlay);
   pointer-events: none;
   z-index: 0;
+  transition: background 0.4s ease;
 }
 
 .app {
@@ -115,14 +182,71 @@ a:hover {
 .top-link {
   padding: 0.65rem 1.1rem;
   border-radius: 999px;
-  background: rgba(37, 99, 235, 0.12);
+  background: var(--top-link-bg);
   color: var(--primary-strong);
   font-weight: 500;
-  border: 1px solid rgba(37, 99, 235, 0.12);
+  border: 1px solid var(--top-link-border);
+  transition: background 0.3s ease, border-color 0.3s ease;
 }
 
 .top-link:hover {
-  background: rgba(37, 99, 235, 0.18);
+  background: var(--top-link-hover-bg);
+}
+
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 0.95rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-primary);
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease, transform 0.2s ease;
+}
+
+.theme-toggle:hover {
+  border-color: var(--primary-soft);
+  color: var(--primary-strong);
+  transform: translateY(-1px);
+}
+
+.theme-toggle__icon {
+  font-size: 1.05rem;
+  line-height: 1;
+  transition: transform 0.3s ease;
+}
+
+.theme-toggle__label {
+  font-size: 0.9rem;
+  letter-spacing: 0.01em;
+}
+
+html[data-theme="dark"] .theme-toggle {
+  background: var(--surface-elevated);
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+
+html[data-theme="dark"] .theme-toggle:hover {
+  border-color: var(--primary-strong);
+}
+
+html[data-theme="dark"] .theme-toggle__icon {
+  transform: rotate(180deg);
+}
+
+@media (max-width: 640px) {
+  .theme-toggle {
+    padding: 0.55rem 0.75rem;
+  }
+
+  .theme-toggle__label {
+    display: none;
+  }
 }
 
 .main {
@@ -139,6 +263,7 @@ a:hover {
   border: 1px solid var(--border);
   box-shadow: var(--shadow-lg);
   padding: clamp(1.75rem, 2.2vw, 2.4rem);
+  transition: background 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
 }
 
 .hero {
@@ -197,15 +322,16 @@ a:hover {
   justify-content: center;
   padding: 0.75rem 1.35rem;
   border-radius: 16px;
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid var(--ghost-border);
+  background: var(--ghost-bg);
   color: var(--text-primary);
   font-weight: 600;
   box-shadow: 0 18px 35px -28px rgba(15, 23, 42, 0.55);
+  transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
 
 .ghost-button:hover {
-  border-color: rgba(37, 99, 235, 0.24);
+  border-color: var(--ghost-hover-border);
   color: var(--primary-strong);
 }
 
@@ -277,8 +403,8 @@ a:hover {
   width: 100%;
   padding: 1.1rem 1.15rem;
   border-radius: 18px;
-  border: 1px solid var(--divider);
-  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
   color: inherit;
   font-size: 1rem;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
@@ -318,13 +444,13 @@ button.primary:hover:not(:disabled) {
 }
 
 button.secondary {
-  background: rgba(148, 163, 184, 0.15);
+  background: var(--secondary-bg);
   color: var(--text-primary);
-  border: 1px solid rgba(148, 163, 184, 0.2);
+  border: 1px solid var(--secondary-border);
 }
 
 button.secondary:hover {
-  background: rgba(148, 163, 184, 0.23);
+  background: var(--secondary-hover-bg);
 }
 
 button:disabled {
@@ -349,9 +475,10 @@ button:disabled {
   gap: 1rem;
   padding: 0.95rem 1.15rem;
   border-radius: 20px;
-  background: rgba(248, 250, 252, 0.7);
-  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: var(--list-item-bg);
+  border: 1px solid var(--list-item-border);
   box-shadow: var(--shadow-sm);
+  transition: background 0.3s ease, border-color 0.3s ease;
 }
 
 .symptom-label {
@@ -363,10 +490,11 @@ button:disabled {
   min-width: 132px;
   padding: 0.6rem 0.75rem;
   border-radius: 14px;
-  border: 1px solid rgba(148, 163, 184, 0.4);
-  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
   color: inherit;
   font-weight: 500;
+  transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
 
 .symptom-select:focus {
@@ -441,10 +569,11 @@ button:disabled {
   position: relative;
   padding: 1.35rem 1.5rem;
   border-radius: 24px;
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--diagnosis-card-bg);
   overflow: hidden;
   border: 1px solid rgba(148, 163, 184, 0.2);
   box-shadow: var(--shadow-sm);
+  transition: background 0.35s ease, border-color 0.35s ease;
 }
 
 .diagnosis-card::before {
@@ -490,11 +619,12 @@ button:disabled {
 }
 
 .summary-grid section {
-  background: rgba(248, 250, 252, 0.8);
+  background: var(--summary-bg);
   border-radius: 20px;
-  border: 1px solid rgba(148, 163, 184, 0.18);
+  border: 1px solid var(--summary-border);
   padding: 1.1rem 1.25rem;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transition: background 0.35s ease, border-color 0.35s ease;
 }
 
 .summary-grid h3 {
@@ -520,8 +650,8 @@ button:disabled {
 }
 
 code {
-  background: rgba(37, 99, 235, 0.08);
-  color: var(--primary-strong);
+  background: var(--code-bg);
+  color: var(--code-text);
   padding: 0.25rem 0.45rem;
   border-radius: 0.5rem;
   font-size: 0.9em;
@@ -539,7 +669,7 @@ code {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.45);
+  background: var(--scrollbar-thumb);
   border-radius: 999px;
 }
 

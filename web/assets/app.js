@@ -4,6 +4,97 @@ const clearButton = document.getElementById("clear-selection");
 const runButton = document.getElementById("run-diagnosis");
 const resultsEl = document.getElementById("results");
 const statusEl = document.getElementById("status");
+const rootEl = document.documentElement;
+const themeToggle = document.getElementById("theme-toggle");
+const themeToggleIcon = themeToggle?.querySelector(".theme-toggle__icon");
+const themeToggleLabel = themeToggle?.querySelector(".theme-toggle__label");
+
+const THEME_STORAGE_KEY = "acpd-theme";
+let userSetTheme = false;
+let colorSchemeMediaQuery;
+
+function getStoredTheme() {
+  try {
+    return localStorage.getItem(THEME_STORAGE_KEY);
+  } catch (_) {
+    return null;
+  }
+}
+
+function persistTheme(theme) {
+  userSetTheme = true;
+  try {
+    localStorage.setItem(THEME_STORAGE_KEY, theme);
+  } catch (_) {
+    // Ignore storage failures (e.g., private mode)
+  }
+}
+
+function resolvePreferredTheme(storedTheme) {
+  if (storedTheme === "dark" || storedTheme === "light") {
+    return storedTheme;
+  }
+
+  if (typeof window !== "undefined" && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+    return "dark";
+  }
+
+  return "light";
+}
+
+function applyTheme(theme) {
+  const resolvedTheme = theme === "dark" ? "dark" : "light";
+  const targetTheme = resolvedTheme === "dark" ? "light" : "dark";
+
+  rootEl.setAttribute("data-theme", resolvedTheme);
+
+  if (themeToggle) {
+    themeToggle.dataset.theme = resolvedTheme;
+    themeToggle.setAttribute("aria-pressed", resolvedTheme === "dark" ? "true" : "false");
+    themeToggle.setAttribute("aria-label", `Switch to ${targetTheme} mode`);
+
+    if (themeToggleIcon) {
+      themeToggleIcon.textContent = targetTheme === "dark" ? "🌙" : "☀️";
+    }
+
+    if (themeToggleLabel) {
+      themeToggleLabel.textContent = `${targetTheme.charAt(0).toUpperCase()}${targetTheme.slice(1)} mode`;
+    }
+  }
+}
+
+function initTheme() {
+  const storedTheme = getStoredTheme();
+  userSetTheme = storedTheme === "dark" || storedTheme === "light";
+  const startingTheme = resolvePreferredTheme(storedTheme);
+
+  applyTheme(startingTheme);
+
+  if (window.matchMedia) {
+    colorSchemeMediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const handlePreferenceChange = (event) => {
+      if (userSetTheme) return;
+      applyTheme(event.matches ? "dark" : "light");
+    };
+
+    if (colorSchemeMediaQuery.addEventListener) {
+      colorSchemeMediaQuery.addEventListener("change", handlePreferenceChange);
+    } else if (colorSchemeMediaQuery.addListener) {
+      colorSchemeMediaQuery.addListener(handlePreferenceChange);
+    }
+  }
+
+  if (themeToggle) {
+    themeToggle.addEventListener("click", () => {
+      const currentTheme = rootEl.getAttribute("data-theme") === "dark" ? "dark" : "light";
+      const nextTheme = currentTheme === "dark" ? "light" : "dark";
+      applyTheme(nextTheme);
+      persistTheme(nextTheme);
+    });
+  }
+}
+
+initTheme();
 
 let allSymptoms = [];
 let filteredSymptoms = [];
