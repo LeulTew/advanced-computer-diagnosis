@@ -73,9 +73,12 @@ Use `diagnosis_from_answers/3` for embedding in services or tests. It reuses the
 
 | Tool | Command | Purpose |
 | --- | --- | --- |
-| Unit + Integration Tests | `swipl -s diag.pl -s test/diag_tests.pl -g run_tests -g halt` | Validates inference, scoring, and integration flows. |
-| Static Analysis | `swipl -q -s tools/static_analysis.pl` | Reports undefined predicates/drift. |
-| Performance Profiling | `swipl -q -s tools/perf_profile.pl` | Benchmarks representative diagnosis scenarios. |
+| Automated Install | `bash scripts/install.sh` | Installs SWI-Prolog, bootstraps optional voice dependencies, and runs health checks. |
+| Full Check Suite | `./scripts/run_checks.sh` | Runs static analysis plus all unit/integration tests with one command. |
+| Unit + Integration Tests | `swipl -s diag.pl -s test/diag_tests.pl -g run_tests -g halt` | Validate inference, scoring, and integration flows individually. |
+| Static Analysis | `swipl -q -s tools/static_analysis.pl` | Reports undefined predicates/drift via `prolog_xref`. |
+| Performance Profiling (CLI) | `./scripts/run_profile.sh` | Benchmarks representative diagnosis scenarios and writes `data/perf_profile.json`. |
+| Performance Profiling (raw) | `swipl -q -s tools/perf_profile.pl` | Run the benchmarking harness directly with custom CLI flags. |
 | GitHub Actions | `.github/workflows/ci.yml` | Installs SWI-Prolog, optional Python deps, and runs tests on pushes/PRs. |
 
 ## 5. File Layout
@@ -90,10 +93,13 @@ Use `diagnosis_from_answers/3` for embedding in services or tests. It reuses the
 │   ├── static_analysis.pl  # Undefined predicate checker
 │   └── perf_profile.pl     # Benchmark harness
 ├── scripts/
+│   ├── run_checks.sh       # Aggregated static analysis + tests
+│   ├── run_profile.sh      # Convenience wrapper for perf profiling
 │   └── voice_capture.py    # Speech-to-text bridge (optional)
 ├── data/
 │   ├── .gitignore          # Ignore generated snapshots
-│   └── kb_dynamic.pl       # Autosaved knowledge (generated)
+│   ├── kb_dynamic.pl       # Autosaved knowledge (generated)
+│   └── perf_profile.json   # Latest performance benchmark report (generated)
 ├── docs/
 │   ├── user-guide.md
 │   └── developer-guide.md

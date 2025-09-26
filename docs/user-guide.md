@@ -8,14 +8,14 @@ Welcome to the **Advanced Computer Problem Diagnosis Expert System**! This guide
 swipl -s diag.pl -g main
 ```
 
-You will see a colorized menu with options for running diagnoses, teaching the system, viewing analytics, switching languages, and more. Navigate using the numeric options followed by a trailing period (e.g., `1.`).
+You will see a colorized menu with options for running diagnoses, teaching the system, viewing analytics, switching languages, and more. Navigate using plain numeric options (e.g., `1`).
 
 ## 2. Running a Diagnosis
 
 Choose **Start diagnosis (guided)** to enter the traditional yes/no workflow.
 
 1. Optionally describe the issue in free text. The system will pre-fill symptoms that match your description.
-2. Answer each symptom prompt with `yes.`, `no.`, or `unsure.` (note the trailing period!).
+2. Answer each symptom prompt with `yes.`, `no.`, or `unsure.` (these atoms still require the trailing period).
 3. If the system detects contradictory answers, it will offer to resolve them for you.
 4. Follow-up questions may appear through rule-based chaining (e.g., confirming dust accumulation after overheating is reported).
 5. Results show:
@@ -46,8 +46,9 @@ Select **Start diagnosis (voice input)** for a hands-free session.
 ## 4. Analytics and Reporting
 
 - Each diagnosis appends a JSON line to `data/analytics.jsonl` capturing timestamp, confirmed/rejected symptoms, and ranked causes.
-- Use **Show analytics summary** to get quick statistics (total sessions, top causes). The summary pulls data from the analytics log.
+- Use **Show analytics summary** (option 10) to view localized quick stats such as total sessions and top causes. The command reads directly from the analytics log.
 - All generated analytics are ignored by Git and safe for local experimentation.
+- Want deeper insights? Pipe `data/analytics.jsonl` through `jq`, load it into a notebook, or feed it into your favorite dashboard tool.
 
 ## 5. Multi-language Support
 
@@ -57,8 +58,11 @@ Switch languages via **Change language** (currently English `en` and Spanish `es
 
 | Script | Purpose |
 | --- | --- |
+| `scripts/install.sh` | Automated dependency installer and health-check runner (`bash scripts/install.sh`). |
 | `tools/static_analysis.pl` | Detect undefined predicates and knowledge base drift (`swipl -q -s tools/static_analysis.pl`). |
-| `tools/perf_profile.pl` | Run repeatable diagnosis scenarios and report runtime (`swipl -q -s tools/perf_profile.pl`). |
+| `tools/perf_profile.pl` | Run repeatable diagnosis scenarios and capture latency, CPU, memory, and inference metrics (`swipl -q -s tools/perf_profile.pl`). |
+| `scripts/run_checks.sh` | Shell wrapper that runs static analysis plus all unit/integration tests in one go. |
+| `scripts/run_profile.sh` | Convenience launcher for the performance benchmarks (results land in `data/perf_profile.json`). |
 
 ## 7. Tips & Troubleshooting
 

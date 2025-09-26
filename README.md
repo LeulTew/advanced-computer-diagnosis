@@ -96,6 +96,16 @@ Tip: check the current knowledge snapshot anytime via the **View knowledge base*
 
 ## ⚡ Quickstart
 
+### 0. One-liner setup (optional)
+
+Prefer automation? Let the project script install dependencies, set up the optional Python voice environment, and run health checks:
+
+```fish
+bash scripts/install.sh
+```
+
+Skip the script if you want to manage packages manually.
+
 ### 1. Install SWI-Prolog
 
 ```fish
@@ -179,13 +189,53 @@ Option **3** captures a short voice snippet (via Vosk + sounddevice) and transcr
 
 Use option **11** to toggle between English (`en`) and Spanish (`es`). Prompts and summaries update instantly; answers remain the Prolog atoms `yes.`, `no.`, and `unsure.`
 
+## 📊 Analytics & Reporting
+
+- **Session JSONL log**: Every run appends a record to `data/analytics.jsonl` capturing timestamps, observed symptoms, and ranked diagnoses.
+- **Quick stats**: Choose menu option **10** to see total sessions and the most frequent causes. The text is localized automatically.
+- **Raw exports**: The analytics file is newline-delimited JSON, ideal for piping into dashboards or further analysis.
+
+Need automated summaries in CI? You can stream the JSONL file through `jq`, convert it to CSV, or feed it into your own reporting pipeline.
+
+## 🛠️ Tooling & Automation
+
+| Task | Command | Notes |
+| --- | --- | --- |
+| Guided installer | `bash scripts/install.sh` | Detects your platform, installs SWI-Prolog, optionally sets up the Python voice pipeline, and runs checks. |
+| Static analysis | `swipl -q -s tools/static_analysis.pl` | Uses `prolog_xref` to flag undefined predicates without loading the CLI. |
+| Full check suite | `./scripts/run_checks.sh` | Runs static analysis plus unit/integration tests; ideal for pre-commit hooks and CI. |
+| Performance profiling | `./scripts/run_profile.sh` | Benchmarks representative diagnosis scenarios and saves metrics to `data/perf_profile.json`. |
+
+The profiling report includes averages, medians, 95th percentile latency, inference counts, and memory deltas for each scenario—helpful when tuning rules or tracking regressions.
+
+## 📚 Documentation
+
+- `docs/user-guide.md` – Guided walkthrough of the CLI, natural language mode, and troubleshooting tips.
+- `docs/developer-guide.md` – Architecture deep dive, coding conventions, and extension recipes.
+- `CHANGELOG.md` – Semantic version history covering new capabilities and bug fixes.
+- _Video tutorials_ – Planned screencasts will demonstrate voice input setup, knowledge authoring, and analytics review (see roadmap for tracking).
+
 ## 🧪 Testing & Quality
 
-Built-in tests keep foundational facts and scoring logic honest:
+Prefer the aggregated script for day-to-day verification:
+
+```fish
+./scripts/run_checks.sh
+```
+
+This runs static analysis followed by unit and integration suites. If you want to target just one file, fall back to raw `plunit`:
 
 ```fish
 swipl -s diag.pl -s test/diag_tests.pl -g run_tests -g halt
 ```
+
+Benchmark the inference engine whenever you tweak reasoning rules:
+
+```fish
+./scripts/run_profile.sh --iterations=50
+```
+
+Results are stored in `data/perf_profile.json`, making it easy to diff performance across branches.
 
 Add new predicates? Mirror them with unit tests (`plunit`) for consistent reliability. Consider enabling the optional GitHub Actions workflow for automatic validation on pull requests.
 

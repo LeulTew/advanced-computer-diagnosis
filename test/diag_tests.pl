@@ -1,5 +1,10 @@
 :- use_module(library(readutil)).
 
+:- ( current_predicate(user:symptom/1)
+    -> true
+    ;  consult('../diag.pl')
+    ).
+
 :- begin_tests(diag_tests).
 
 :- consult('test/integration_tests.pl').

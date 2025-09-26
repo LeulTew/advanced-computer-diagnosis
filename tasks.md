@@ -21,21 +21,21 @@ This roadmap highlights actionable steps to elevate the Advanced Computer Proble
 ## Tooling & Testing
 - [x] **Automate knowledge base linting** – Write Prolog unit tests (using `plunit`) to verify facts are consistent and non-duplicated. 
 - [x] **CI integration** – Configure GitHub Actions to run tests and style checks on every push/pr.
-- [ ] **Static analysis** – Evaluate using `swipl -q -g "list_undefined."` or similar to detect undefined predicates.
-- [ ] **Performance profiling** – Add benchmarks for diagnosis speed and memory usage.
-- [ ] **Integration tests** – Test full user workflows end-to-end.
+- [x] **Static analysis** – Evaluate using `swipl -q -g "list_undefined."` or similar to detect undefined predicates.
+- [x] **Performance profiling** – Add benchmarks for diagnosis speed and memory usage.
+- [x] **Integration tests** – Test full user workflows end-to-end.
 
 ## Documentation
-- [ ] **User guide** – Create a walkthrough for typical troubleshooting scenarios. 
-- [ ] **Developer guide** – Document architecture, data flow, and how to extend the knowledge base safely. 
-- [ ] **Changelog & versioning** – Establish semantic versioning with release notes.
-- [ ] **API documentation** – If APIs are added, document endpoints and usage.
+- [x] **User guide** – Create a walkthrough for typical troubleshooting scenarios. 
+- [x] **Developer guide** – Document architecture, data flow, and how to extend the knowledge base safely. 
+- [x] **Changelog & versioning** – Establish semantic versioning with release notes.
+- [x] **API documentation** – If APIs are added, document endpoints and usage.
 - [ ] **Video tutorials** – Create screencasts for setup and usage.
 
 ## Distribution & Outreach
-- [ ] **Package for easy install** – Provide a simple shell script or package to install dependencies and launch the system.
-- [ ] **Web interface revival** – Modernize the HTML interface found in `Old Versions/` or rebuild with a lightweight frontend (e.g., using Prolog's HTTP server or Node.js/React).
-- [ ] **Simple frontend** – Build a basic web UI for diagnosis without CLI (e.g., form-based input, results display).
+- [x] **Package for easy install** – Provide a simple shell script or package to install dependencies and launch the system.
+- [x] **Web interface revival** – Modernize the HTML interface found in `Old Versions/` or rebuild with a lightweight frontend (e.g., using Prolog's HTTP server or Node.js/React).
+- [x] **Simple frontend** – Build a basic web UI for diagnosis without CLI (e.g., form-based input, results display).
 - [ ] **Collect feedback** – Integrate a simple feedback mechanism (email or issue template) for reported gaps.
 - [ ] **Docker containerization** – Package the app in a Docker image for easy deployment.
 - [ ] **Mobile app** – Develop a companion app for Android/iOS using frameworks like Flutter or React Native.

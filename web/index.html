@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Advanced Computer Diagnosis – Web</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="assets/styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="top-bar">
+        <div class="brand">
+          <span class="brand-icon" aria-hidden="true">⚡</span>
+          <div class="brand-text">
+            <strong>Advanced Computer Diagnosis</strong>
+            <span>Guided troubleshooting, made simple</span>
+          </div>
+        </div>
+        <a class="top-link" href="#results">View latest session</a>
+      </header>
+
+      <main class="main">
+        <section class="hero card">
+          <p class="hero-eyebrow">Instant clarity</p>
+          <h1>Diagnose computer issues with confidence.</h1>
+          <p>
+            Select the symptoms you're seeing, let the expert engine analyze the patterns, and receive prioritized fixes in
+            seconds.
+          </p>
+          <div class="hero-actions">
+            <a class="ghost-button" href="#symptom-search">Browse symptoms</a>
+            <span class="hero-subtext">Prefer the CLI? <code>swipl -s diag.pl -g main</code></span>
+          </div>
+        </section>
+
+        <section class="workflow-grid">
+          <article class="card panel panel--selection">
+            <header class="panel-header">
+              <span class="step-tag">Step 1</span>
+              <h2>Select observed symptoms</h2>
+              <p>
+                Search or scroll through curated signals. Mark each as <strong>Yes</strong>, <strong>No</strong>, or
+                <strong>Unsure</strong>. Leave it on <em>Skip</em> to ignore.
+              </p>
+            </header>
+
+            <div class="symptom-controls">
+              <div class="field">
+                <input
+                  type="search"
+                  id="symptom-search"
+                  placeholder="Search symptoms (e.g. blue screen, wifi)"
+                  autocomplete="off"
+                />
+              </div>
+              <button id="clear-selection" class="secondary" type="button">Reset selection</button>
+            </div>
+
+            <div id="symptom-list" class="symptom-list" aria-live="polite"></div>
+
+            <div class="panel-footer">
+              <button id="run-diagnosis" class="primary" type="button">Run diagnosis</button>
+              <div id="status" class="status-banner" role="status" aria-live="polite"></div>
+            </div>
+          </article>
+
+          <aside class="card panel panel--results" aria-live="polite">
+            <header class="panel-header">
+              <span class="step-tag step-tag--accent">Step 2</span>
+              <h2>Review tailored guidance</h2>
+              <p>Insights refresh instantly each time you run a diagnosis.</p>
+            </header>
+            <div id="results" class="results">
+              <p class="muted">
+                No diagnosis yet. Select a few symptoms and click <em>Run diagnosis</em> to see prioritized causes and fixes.
+              </p>
+            </div>
+          </aside>
+        </section>
+      </main>
+
+      <footer class="site-footer">
+        <p>Powered by SWI-Prolog · Crafted for clarity and speed</p>
+      </footer>
+    </div>
+
+    <script src="assets/app.js" type="module"></script>
+  </body>
+</html>

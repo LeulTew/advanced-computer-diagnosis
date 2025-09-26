@@ -7,6 +7,7 @@
 :- use_module(library(apply)).
 :- use_module(library(lists)).
 :- use_module(library(pairs)).
+:- use_module(library(listing)).
 
 % Knowledge base
 :- dynamic symptom/1, cause/1, solution/2, symptom_cause/2, confidence/2, contradiction/2, symptom_probability/3.
@@ -38,6 +39,8 @@ locale_text(en, menu_option_11, 'Change language').
 locale_text(en, menu_option_12, 'Exit').
 locale_text(en, invalid_choice, 'Invalid choice. Please try again.').
 locale_text(en, menu_prompt, 'Select an option (enter a number 1-12): ').
+locale_text(en, conflict_choice_prompt, 'Select an option (enter 1-3): ').
+locale_text(en, view_kb_prompt, 'Select what to view (enter a number 1-7): ').
 locale_text(en, welcome_message, 'Welcome to the Advanced Computer Problem Diagnosis Expert System!').
 locale_text(en, input_instruction, 'Answer with yes., no., or unsure.').
 locale_text(en, contradiction_notice, 'Detected a contradiction: ~w and ~w cannot both be true.').
@@ -88,6 +91,8 @@ locale_text(es, menu_option_11, 'Cambiar idioma').
 locale_text(es, menu_option_12, 'Salir').
 locale_text(es, invalid_choice, 'Opción inválida. Inténtelo de nuevo.').
 locale_text(es, menu_prompt, 'Seleccione una opción (ingrese un número 1-12): ').
+locale_text(es, conflict_choice_prompt, 'Seleccione una opción (ingrese un número 1-3): ').
+locale_text(es, view_kb_prompt, 'Seleccione qué ver (ingrese un número 1-7): ').
 locale_text(es, welcome_message, '¡Bienvenido al Sistema Experto Avanzado de Diagnóstico de Computadoras!').
 locale_text(es, input_instruction, 'Responda con yes., no., o unsure.').
 locale_text(es, contradiction_notice, 'Se detectó una contradicción: ~w y ~w no pueden ser verdaderos a la vez.').
@@ -132,8 +137,11 @@ localized_text(Key, Args, Text) :-
     format(string(Text), Format, Args).
 
 ui_line(Attrs, Key, Args) :-
+    diagnosis_mode(interactive),
+    !,
     localized_text(Key, Args, Text),
     ansi_format(Attrs, '~w~n', [Text]).
+ui_line(_Attrs, _Key, _Args).
 
 ui_line(Key, Args) :-
     ui_line([fg(cyan)], Key, Args).
@@ -148,14 +156,20 @@ ui_muted(Key, Args) :-
     ui_line([fg(blue)], Key, Args).
 
 ui_prompt(Key, Args) :-
+    diagnosis_mode(interactive),
+    !,
     localized_text(Key, Args, Text),
     ansi_format([fg(yellow)], '~w', [Text]),
     flush_output.
+ui_prompt(_Key, _Args).
 
 print_menu_option(Index, Key) :-
+    diagnosis_mode(interactive),
+    !,
     localized_text(Key, [], Text),
     ansi_format([fg(yellow)], '~d. ', [Index]),
     ansi_format([fg(white)], '~w~n', [Text]).
+print_menu_option(_, _).
 
 set_diagnosis_mode(Mode) :-
     retractall(diagnosis_mode(_)),
@@ -493,22 +507,31 @@ handle_choice(12) :- ui_notice(menu_option_12, []), !.
 handle_choice(_) :- fail.
 
 read_menu_choice(Choice) :-
-    ui_prompt(menu_prompt, []),
+    read_numeric_choice(ui_prompt(menu_prompt, []), 1, 12, Choice).
+
+read_numeric_choice(PromptGoal, Min, Max, Choice) :-
+    call(PromptGoal),
     flush_output,
     read_line_to_string(user_input, Raw),
-    (   parse_menu_choice(Raw, Choice)
+    (   parse_numeric_choice(Raw, Min, Max, Choice)
     ->  true
     ;   ui_warning(invalid_choice, []),
-        read_menu_choice(Choice)
+        read_numeric_choice(PromptGoal, Min, Max, Choice)
     ).
 
 parse_menu_choice(Raw, Choice) :-
+    parse_numeric_choice(Raw, 1, 12, Choice).
+
+parse_numeric_choice(Raw, Min, Max, Choice) :-
     normalize_space(string(Trimmed), Raw),
     Trimmed \= "",
     strip_trailing_period(Trimmed, CleanString),
     atom_string(Atom, CleanString),
     catch(read_term_from_atom(Atom, Parsed, []), _, fail),
-    valid_menu_choice(Parsed, Choice).
+    integer(Parsed),
+    Parsed >= Min,
+    Parsed =< Max,
+    Choice = Parsed.
 
 strip_trailing_period(String, Cleaned) :-
     (   sub_string(String, Before, 1, 0, "."),
@@ -518,12 +541,6 @@ strip_trailing_period(String, Cleaned) :-
     ->  sub_string(String, 0, Before, _, Cleaned)
     ;   Cleaned = String
     ).
-
-valid_menu_choice(Parsed, Choice) :-
-    integer(Parsed),
-    Parsed >= 1,
-    Parsed =< 12,
-    Choice = Parsed.
 
 % Start the diagnosis process
 start_diagnosis :-
@@ -661,6 +678,7 @@ find_conflict_pair(Answers, A, B) :-
 prompt_conflict_resolution(A, B, Answers, Updated) :-
     diagnosis_mode(non_interactive),
     !,
+    % For non-interactive (API) mode, always mark both as unsure, no output
     adjust_answers(A, unsure, Answers, Temp),
     adjust_answers(B, unsure, Temp, Updated).
 
@@ -672,7 +690,7 @@ prompt_conflict_resolution(A, B, Answers, Updated) :-
     ansi_format([fg(yellow)], '1. ~w~n', [Opt1]),
     ansi_format([fg(yellow)], '2. ~w~n', [Opt2]),
     ansi_format([fg(yellow)], '3. ~w~n', [Opt3]),
-    read(Choice),
+    read_numeric_choice(ui_prompt(conflict_choice_prompt, []), 1, 3, Choice),
     (   Choice == 1 ->
         adjust_answers(B, no, Answers, Updated)
     ;   Choice == 2 ->
@@ -680,8 +698,6 @@ prompt_conflict_resolution(A, B, Answers, Updated) :-
     ;   Choice == 3 ->
         adjust_answers(A, unsure, Answers, Temp),
         adjust_answers(B, unsure, Temp, Updated)
-    ;   ui_warning(invalid_conflict_choice, []),
-        prompt_conflict_resolution(A, B, Answers, Updated)
     ).
 
 adjust_answers(Symptom, NewAnswer, [(Symptom, _)|Rest], [(Symptom, NewAnswer)|Rest]) :- !.
@@ -1102,8 +1118,7 @@ view_knowledge_base :-
     write('5. View confidences'), nl,
     write('6. View solutions'), nl,
     write('7. Exit'), nl,
-    write('|: '),
-    read(Choice),
+    read_numeric_choice(ui_prompt(view_kb_prompt, []), 1, 7, Choice),
     handle_view_choice(Choice).
 
 % Handle user's choice based on their input
