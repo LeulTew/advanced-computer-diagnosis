@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install SWI-Prolog
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y swi-prolog
+
+      - name: Install voice interface dependencies
+        run: |
+          if [ -f requirements.txt ]; then python3 -m pip install --user -r requirements.txt; fi
+
+      - name: Run unit tests
+        run: |
+          swipl -q -s diag.pl -s test/diag_tests.pl -g run_tests -g halt
