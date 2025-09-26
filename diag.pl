@@ -134,18 +134,16 @@ start_diagnosis :-
     write('Welcome to the Advanced Computer Problem Diagnosis Expert System!'), nl,
     write('I will ask you about symptoms. Please answer with yes., no., or unsure.'), nl,
     findall(Symptom, (symptom(Symptom), Symptom \= unexpected_shutdowns), Symptoms),
-    ask_symptoms(Symptoms, [], Observed),
-    find_causes(Observed, Causes),
+    ask_symptoms(Symptoms, [], AllAnswers),
+    find_causes(AllAnswers, Causes),
     present_diagnosis(Causes),
     !.  % Cut to prevent backtracking
 
 % Ask about symptoms iteratively
-ask_symptoms([], Observed, Observed).
-ask_symptoms([Symptom|Rest], AccObserved, Observed) :-
+ask_symptoms([], Answers, Answers).
+ask_symptoms([Symptom|Rest], Acc, Answers) :-
     ask_symptom(Symptom, Answer),
-    (Answer == yes ->
-        ask_symptoms(Rest, [Symptom|AccObserved], Observed);
-    ask_symptoms(Rest, AccObserved, Observed)).
+    ask_symptoms(Rest, [(Symptom, Answer)|Acc], Answers).
 
 % Ask about a symptom
 ask_symptom(Symptom, Answer) :-
@@ -159,9 +157,9 @@ ask_symptom(Symptom, Answer) :-
     write('Invalid input. Please enter yes., no., or unsure.'), nl, fail).
 
 % Find potential causes based on observed symptoms
-find_causes(Observed, Causes) :-
+find_causes(AllAnswers, Causes) :-
     findall(Cause, (
-        member(Symptom, Observed),
+        member((Symptom, _), AllAnswers),
         symptom_cause(Symptom, Cause)
     ), CausesWithDuplicates),
     sort(CausesWithDuplicates, UniqueCauses),
@@ -169,17 +167,32 @@ find_causes(Observed, Causes) :-
         Causes = [(unknown, 1.0)];
         findall((Cause, AdjustedConf), (
             member(Cause, UniqueCauses),
-            adjust_confidence(Cause, Observed, AdjustedConf)
+            adjust_confidence(Cause, AllAnswers, AdjustedConf)
         ), CausesWithConf),
         sort(2, @>=, CausesWithConf, Causes)
     ).
 
-% Adjust confidence based on the number of matching symptoms
-adjust_confidence(Cause, Observed, AdjustedConf) :-
+% Adjust confidence based on the answers to symptoms
+adjust_confidence(Cause, AllAnswers, AdjustedConf) :-
     confidence(Cause, BaseConf),
-    findall(1, (member(Symptom, Observed), symptom_cause(Symptom, Cause)), Matches),
-    length(Matches, MatchCount),
-    AdjustedConf is BaseConf * (1 + 0.1 * MatchCount).
+    findall(Symptom, symptom_cause(Symptom, Cause), SymptomsForCause),
+    length(SymptomsForCause, NumSymptoms),
+    (NumSymptoms == 0 ->
+        AdjustedConf = BaseConf;
+        calculate_score(SymptomsForCause, AllAnswers, Score),
+        AdjustedConf is BaseConf * (1 + Score / NumSymptoms)
+    ).
+
+% Calculate score based on answers
+calculate_score([], _, 0).
+calculate_score([Symptom|Rest], AllAnswers, Score) :-
+    (member((Symptom, Answer), AllAnswers) ->
+        (Answer == yes -> Weight = 1;
+         Answer == no -> Weight = -0.5;
+         Weight = 0);
+        Weight = 0),  % if not asked, but should be all asked
+    calculate_score(Rest, AllAnswers, RestScore),
+    Score is RestScore + Weight.
 
 % Present the diagnosis results with added error handling and redundancy removal
 present_diagnosis(Causes) :-
@@ -213,7 +226,7 @@ explain_diagnosis(Causes) :-
     nl, write('The system uses the following logic for diagnosis:'), nl,
     write('1. It asks about known symptoms, allowing for uncertainty.'), nl,
     write('2. It matches symptoms to possible causes based on confidence levels.'), nl,
-    write('3. It adjusts confidence based on the number of matching symptoms.'), nl,
+    write('3. It adjusts confidence based on symptom answers (yes +1, no -0.5, unsure 0), normalized by number of associated symptoms.'), nl,
     write('4. If multiple causes are likely, it prioritizes them based on adjusted confidence.'), nl,
     nl, write('Here are the specific symptoms and their likely causes:'), nl,
     explain_causes(Causes),

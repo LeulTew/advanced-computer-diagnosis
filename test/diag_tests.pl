@@ -9,7 +9,13 @@ test(cause_exists) :-
 
 % Test that finding causes returns at least one expected cause for a known symptom
 test(find_causes_basic) :-
-    user:find_causes([slow_performance], Causes),
+    user:find_causes([(slow_performance, yes)], Causes),
     ( member((virus,_), Causes) ; member((hardware_failure,_), Causes) ).
+
+% Test confidence adjustment with no answer
+test(find_causes_with_no) :-
+    user:find_causes([(slow_performance, no)], Causes),
+    member((virus, Conf), Causes),
+    Conf < 0.9.  % Should be lower than base
 
 :- end_tests(diag_tests).
